@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testimoni Pelanggan</title>
+    <title>Testimoni Moodies</title>
     <!-- Tailwind CSS untuk Styling Cepat -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -56,9 +56,15 @@
                 <h2 class="text-xl font-bold mb-4">Berikan Ulasan Anda</h2>
                 <form id="testimonialForm" class="space-y-5">
                     
+                    <!-- Alert Error Custom (Pengganti pop-up alert browser) -->
+                    <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-start gap-3 animate-fade-in">
+                        <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+                        <span id="errorText" class="text-sm font-medium"></span>
+                    </div>
+
                     <!-- Pilih Emoji Profil -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Profil (Emoji)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Profil</label>
                         <div class="flex flex-wrap gap-2" id="emojiContainer">
                             <!-- Emoji akan digenerate oleh JS -->
                         </div>
@@ -66,7 +72,7 @@
 
                     <!-- Beri Bintang -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Penilaian (Bintang)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Penilaian</label>
                         <div class="flex gap-1" id="starContainer">
                             <!-- Bintang akan digenerate oleh JS -->
                         </div>
@@ -112,11 +118,8 @@
     </div>
 
     <script>
-        // Inisialisasi Icon
-        lucide.createIcons();
-
-        // Data & State Awal
-        const emojis = ['👩', '👨', '👧', '👦', '👵', '👴', '😎', '🥳', '🐱', '🐼'];
+        // Data & State Awal (Menggunakan emoji baru dari Anda)
+        const emojis = ['🪻', '💐', '🎀', '🎐', '🍡', '🍨', '🌸', '🐰', '🐱', '🎏'];
         let selectedEmoji = emojis[0];
         let selectedRating = 0;
         let hoverRating = 0;
@@ -124,52 +127,87 @@
         // Data Awal Testimoni (Dikosongkan)
         let testimonials = [];
 
-        // --- RENDER FUNGSI ---
-
-        // Render Pilihan Emoji
-        function renderEmojis() {
+        // --- INISIALISASI EMOJI (Hanya dibuat sekali) ---
+        function initEmojis() {
             const container = document.getElementById('emojiContainer');
             container.innerHTML = '';
             emojis.forEach(emoji => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.textContent = emoji;
-                btn.className = `text-2xl p-2 rounded-full transition-all cursor-pointer ${
-                    selectedEmoji === emoji 
-                        ? 'bg-green-100 scale-110 ring-2 ring-green-500' 
-                        : 'bg-gray-50 hover:bg-gray-100 grayscale-[0.5]'
-                }`;
-                btn.onclick = () => {
+                btn.dataset.emoji = emoji;
+                btn.className = `emoji-btn text-2xl p-2 rounded-full transition-all cursor-pointer`;
+                
+                btn.addEventListener('click', () => {
                     selectedEmoji = emoji;
-                    renderEmojis(); // Re-render untuk update styling
-                };
+                    updateEmojis(); 
+                });
                 container.appendChild(btn);
+            });
+            updateEmojis();
+        }
+
+        // Fungsi memperbarui tampilan emoji aktif
+        function updateEmojis() {
+            const btns = document.querySelectorAll('.emoji-btn');
+            btns.forEach(btn => {
+                if (btn.dataset.emoji === selectedEmoji) {
+                    btn.className = 'emoji-btn text-2xl p-2 rounded-full transition-all cursor-pointer bg-red-50 scale-110 ring-2 ring-[#dc2626] grayscale-0';
+                } else {
+                    btn.className = 'emoji-btn text-2xl p-2 rounded-full transition-all cursor-pointer bg-gray-50 hover:bg-gray-100 grayscale-[0.5]';
+                }
             });
         }
 
-        // Render Pilihan Bintang (Form)
-        function renderStars() {
+        // --- INISIALISASI BINTANG (Mencegah bug klik hilang) ---
+        function initStars() {
             const container = document.getElementById('starContainer');
             container.innerHTML = '';
             for (let i = 1; i <= 5; i++) {
-                const isFilled = i <= (hoverRating || selectedRating);
-                const starHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="${isFilled ? '#facc15' : '#f3f4f6'}" stroke="${isFilled ? '#facc15' : '#e5e7eb'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star transition-transform hover:scale-110 cursor-pointer">
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "star-btn focus:outline-none transition-transform hover:scale-110 cursor-pointer";
+                
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star pointer-events-none star-svg">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                 `;
                 
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.innerHTML = starHTML;
-                btn.className = "focus:outline-none";
-                
-                btn.onclick = () => { selectedRating = i; renderStars(); };
-                btn.onmouseenter = () => { hoverRating = i; renderStars(); };
-                btn.onmouseleave = () => { hoverRating = 0; renderStars(); };
+                btn.addEventListener('click', () => { 
+                    selectedRating = i; 
+                    updateStars(); 
+                });
+                btn.addEventListener('mouseenter', () => { 
+                    hoverRating = i; 
+                    updateStars(); 
+                });
+                btn.addEventListener('mouseleave', () => { 
+                    hoverRating = 0; 
+                    updateStars(); 
+                });
                 
                 container.appendChild(btn);
             }
+            updateStars();
+        }
+
+        // Fungsi memperbarui warna bintang berdasarkan interaksi
+        function updateStars() {
+            const btns = document.querySelectorAll('.star-btn');
+            btns.forEach((btn, index) => {
+                const i = index + 1;
+                const svg = btn.querySelector('.star-svg');
+                const isFilled = i <= (hoverRating || selectedRating);
+                
+                if (isFilled) {
+                    svg.setAttribute('fill', '#facc15');
+                    svg.setAttribute('stroke', '#facc15');
+                } else {
+                    svg.setAttribute('fill', '#f3f4f6');
+                    svg.setAttribute('stroke', '#e5e7eb');
+                }
+            });
         }
 
         // Fungsi Helper untuk generate bintang (Read-only untuk list)
@@ -231,11 +269,19 @@
             e.preventDefault();
             
             const reviewText = document.getElementById('reviewText').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
 
-            if (!reviewText.trim() || selectedRating === 0) {
-                alert('Mohon tuliskan ulasan dan berikan rating bintang!');
+            if (selectedRating === 0 || !reviewText.trim()) {
+                errorText.textContent = selectedRating === 0 
+                    ? 'Mohon berikan rating bintang terlebih dahulu!' 
+                    : 'Mohon tuliskan ulasan Anda!';
+                errorMessage.classList.remove('hidden');
                 return;
             }
+
+            // Sembunyikan error jika sukses
+            errorMessage.classList.add('hidden');
 
             // Tambah data baru ke array
             const newTestimonial = {
@@ -254,14 +300,14 @@
             selectedEmoji = emojis[0];
             
             // Re-render
-            renderEmojis();
-            renderStars();
+            updateEmojis();
+            updateStars();
             renderTestimonialsList();
         });
 
         // Inisialisasi awal saat halaman dimuat
-        renderEmojis();
-        renderStars();
+        initEmojis();
+        initStars();
         renderTestimonialsList();
 
     </script>
