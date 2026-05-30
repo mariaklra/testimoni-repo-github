@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testimoni Pelanggan</title>
+    <!-- Tailwind CSS untuk Styling Cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfbf5;
+        }
+        /* Custom scrollbar untuk area testimoni */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; 
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Kolom Kiri: Form Testimoni Baru -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-[#fcd34d] text-[#dc2626] p-3 rounded-full flex items-center justify-center">
+                    <i data-lucide="message-square-quote"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900">Testimoni</h1>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+                <h2 class="text-xl font-bold mb-4">Berikan Ulasan Anda</h2>
+                <form id="testimonialForm" class="space-y-5">
+                    
+                    <!-- Pilih Emoji Profil -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Profil (Emoji)</label>
+                        <div class="flex flex-wrap gap-2" id="emojiContainer">
+                            <!-- Emoji akan digenerate oleh JS -->
+                        </div>
+                    </div>
+
+                    <!-- Beri Bintang -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Penilaian (Bintang)</label>
+                        <div class="flex gap-1" id="starContainer">
+                            <!-- Bintang akan digenerate oleh JS -->
+                        </div>
+                    </div>
+
+                    <!-- Teks Testimoni -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ulasan</label>
+                        <textarea
+                            id="reviewText"
+                            rows="3"
+                            placeholder="Tuliskan pengalaman Anda di sini..."
+                            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] outline-none transition-all resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Tombol Kirim -->
+                    <button
+                        type="submit"
+                        class="w-full flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                    >
+                        <span>Kirim Testimoni</span>
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Daftar Testimoni -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="flex items-center gap-2 mb-4">
+                <div id="totalReviews" class="bg-[#dc2626] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                    0
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Ulasan Masuk</h2>
+            </div>
+
+            <div id="testimonialsList" class="space-y-4 overflow-y-auto max-h-[80vh] pr-2 pb-10 custom-scrollbar">
+                <!-- List Testimoni akan dimasukkan ke sini oleh JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Inisialisasi Icon
+        lucide.createIcons();
+
+        // Data & State Awal
+        const emojis = ['👩', '👨', '👧', '👦', '👵', '👴', '😎', '🥳', '🐱', '🐼'];
+        let selectedEmoji = emojis[0];
+        let selectedRating = 0;
+        let hoverRating = 0;
+
+        // Data Awal Testimoni (Dikosongkan)
+        let testimonials = [];
+
+        // --- RENDER FUNGSI ---
+
+        // Render Pilihan Emoji
+        function renderEmojis() {
+            const container = document.getElementById('emojiContainer');
+            container.innerHTML = '';
+            emojis.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = emoji;
+                btn.className = `text-2xl p-2 rounded-full transition-all cursor-pointer ${
+                    selectedEmoji === emoji 
+                        ? 'bg-green-100 scale-110 ring-2 ring-green-500' 
+                        : 'bg-gray-50 hover:bg-gray-100 grayscale-[0.5]'
+                }`;
+                btn.onclick = () => {
+                    selectedEmoji = emoji;
+                    renderEmojis(); // Re-render untuk update styling
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Render Pilihan Bintang (Form)
+        function renderStars() {
+            const container = document.getElementById('starContainer');
+            container.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isFilled = i <= (hoverRating || selectedRating);
+                const starHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="${isFilled ? '#facc15' : '#f3f4f6'}" stroke="${isFilled ? '#facc15' : '#e5e7eb'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star transition-transform hover:scale-110 cursor-pointer">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                `;
+                
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.innerHTML = starHTML;
+                btn.className = "focus:outline-none";
+                
+                btn.onclick = () => { selectedRating = i; renderStars(); };
+                btn.onmouseenter = () => { hoverRating = i; renderStars(); };
+                btn.onmouseleave = () => { hoverRating = 0; renderStars(); };
+                
+                container.appendChild(btn);
+            }
+        }
+
+        // Fungsi Helper untuk generate bintang (Read-only untuk list)
+        function generateStarHTML(rating) {
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isFilled = i <= rating;
+                starsHTML += `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${isFilled ? '#facc15' : '#f3f4f6'}" stroke="${isFilled ? '#facc15' : '#e5e7eb'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                `;
+            }
+            return starsHTML;
+        }
+
+        // Render Daftar Testimoni
+        function renderTestimonialsList() {
+            const listContainer = document.getElementById('testimonialsList');
+            const totalElement = document.getElementById('totalReviews');
+            
+            listContainer.innerHTML = '';
+            totalElement.textContent = testimonials.length;
+
+            if (testimonials.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-10 bg-white rounded-3xl border border-gray-200 border-dashed">
+                        Belum ada testimoni. Jadilah yang pertama!
+                    </div>
+                `;
+                return;
+            }
+
+            testimonials.forEach(testi => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-[2rem] border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-5 animate-fade-in";
+                
+                card.innerHTML = `
+                    <div class="flex-shrink-0 flex justify-center sm:block">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center border-4 border-gray-50 text-5xl shadow-inner">
+                            ${testi.emoji}
+                        </div>
+                    </div>
+                    <div class="flex-1 flex flex-col justify-center">
+                        <p class="text-gray-700 text-lg font-medium mb-3 text-center sm:text-left">
+                            ${testi.text}
+                        </p>
+                        <div class="flex gap-1 justify-center sm:justify-start">
+                            ${generateStarHTML(testi.rating)}
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // --- HANDLE SUBMIT FORM ---
+        document.getElementById('testimonialForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const reviewText = document.getElementById('reviewText').value;
+
+            if (!reviewText.trim() || selectedRating === 0) {
+                alert('Mohon tuliskan ulasan dan berikan rating bintang!');
+                return;
+            }
+
+            // Tambah data baru ke array
+            const newTestimonial = {
+                id: Date.now(),
+                emoji: selectedEmoji,
+                text: reviewText,
+                rating: selectedRating
+            };
+
+            // Masukkan ke posisi paling atas
+            testimonials.unshift(newTestimonial);
+
+            // Reset Form
+            document.getElementById('reviewText').value = '';
+            selectedRating = 0;
+            selectedEmoji = emojis[0];
+            
+            // Re-render
+            renderEmojis();
+            renderStars();
+            renderTestimonialsList();
+        });
+
+        // Inisialisasi awal saat halaman dimuat
+        renderEmojis();
+        renderStars();
+        renderTestimonialsList();
+
+    </script>
+</body>
+</html>
