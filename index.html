@@ -28,7 +28,7 @@
             font-family: 'Caveat', cursive;
         }
         
-        /* Custom Scrollbar yang lebih manis */
+        /* Custom Scrollbar yang manis */
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.5); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #b8d8e0; border-radius: 10px; }
@@ -40,13 +40,13 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Efek melayang (hover) untuk card */
+        /* Efek melayang (hover) lurus ke atas tanpa miring */
         .card-hover {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
         }
         .card-hover:hover {
-            transform: translateY(-3px) rotate(-1deg);
-            box-shadow: 0 10px 25px -5px rgba(92, 58, 33, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px -6px rgba(92, 58, 33, 0.18);
         }
     </style>
 </head>
@@ -58,11 +58,12 @@
     <div class="lg:col-span-5 space-y-6">
         
         <!-- Header Brand -->
-        <div class="flex flex-col items-center lg:items-start mb-8 text-center lg:text-left bg-white/80 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-white shadow-sm transform -rotate-1">
+        <div class="flex flex-col items-center lg:items-start mb-8 text-center lg:text-left bg-white/80 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-white shadow-sm">
             <h2 class="text-2xl font-bold text-[#8fb8a2] tracking-wide mb-[-10px]">What they say about</h2>
             <h1 class="text-6xl font-cursive font-bold text-[#5c3a21] drop-shadow-sm">Cookies by Mara</h1>
         </div>
 
+        <!-- Form Box (Hiasan lingkaran pink sudah dihapus sepenuhnya) -->
         <div class="bg-white p-7 rounded-[2.5rem] border-[3px] border-white shadow-xl relative">
 
             <h2 class="text-2xl font-cursive font-bold mb-5 text-[#5c3a21] text-center">Tinggalkan Jejak Manismu!</h2>
@@ -105,7 +106,7 @@
                 <button
                     id="submitBtn"
                     onclick="handleSubmit()"
-                    class="w-full flex items-center justify-center gap-2 bg-[#5c3a21] hover:bg-[#432917] disabled:bg-[#a68a77] disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0"
+                    class="w-full flex items-center justify-center gap-2 bg-[#5c3a21] hover:bg-[#432917] disabled:bg-[#a68a77] disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     <span id="submitLabel" class="text-lg">Kirim Ulasan</span>
                     <i data-lucide="send" class="w-5 h-5"></i>
@@ -132,7 +133,6 @@
 
 <script>
 // ============================================================
-//  Konfigurasi Supabase (Tetap sama seperti aslinya)
 // ============================================================
 const SUPABASE_URL = 'https://adxqycsnwhxxuqhtjxrg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_qGPhYJ8fVKPKfngRQ09vRw_xFJIA8ps';
@@ -145,7 +145,6 @@ const HEADERS = {
 // ============================================================
 //  State & Tema Cookies
 // ============================================================
-// Emoji diganti tema Cookies & Dessert
 const EMOJIS          = ['🍪','🥛','🍩','🍵','🍓','🧁','🍰','🥨','🧸','🤎'];
 const SUBMIT_COOLDOWN = 30 * 1000;
 let selectedEmoji     = EMOJIS[0];
@@ -155,7 +154,6 @@ let lastSubmitTime    = 0;
 let isSubmitting      = false;
 
 // ============================================================
-//  Utilitas
 // ============================================================
 function escapeHTML(str) {
     const div = document.createElement('div');
@@ -182,7 +180,6 @@ function showAlert(type, message) {
 }
 
 // ============================================================
-//  Emoji Logic
 // ============================================================
 function initEmojis() {
     const container = document.getElementById('emojiContainer');
@@ -200,7 +197,6 @@ function initEmojis() {
 
 function updateEmojis() {
     document.querySelectorAll('#emojiContainer button').forEach(btn => {
-        // Styling disesuaikan dengan warna pastel Cookies by Mara
         btn.className = btn.dataset.emoji === selectedEmoji
             ? 'text-3xl p-2 rounded-full transition-all cursor-pointer bg-[#dceef4] scale-110 border-2 border-[#8fb8a2] shadow-sm'
             : 'text-2xl p-2 rounded-full transition-all cursor-pointer bg-white border-2 border-transparent hover:bg-[#fcf5cc] grayscale-[0.3] hover:grayscale-0';
@@ -208,7 +204,6 @@ function updateEmojis() {
 }
 
 // ============================================================
-//  Bintang Logic
 // ============================================================
 function initStars() {
     const container = document.getElementById('starContainer');
@@ -217,7 +212,6 @@ function initStars() {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'star-btn focus:outline-none transition-transform hover:scale-110 cursor-pointer';
-        // Warna dasar bintang diubah agak krem
         btn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
                  fill="#fdfbf0" stroke="#e6dfb8" stroke-width="1.5" stroke-linecap="round"
@@ -236,7 +230,6 @@ function updateStars() {
     document.querySelectorAll('.star-btn').forEach((btn, idx) => {
         const filled = (idx + 1) <= (hoverRating || selectedRating);
         const svg = btn.querySelector('.star-svg');
-        // Bintang menyala warna kuning pastel khas menu, stroke cokelat
         svg.setAttribute('fill',   filled ? '#fcd34d' : '#fdfbf0');
         svg.setAttribute('stroke', filled ? '#d97706' : '#e6dfb8');
     });
@@ -254,14 +247,13 @@ function generateStarHTML(rating) {
 }
 
 // ============================================================
-//  Counter karakter
+//  Character Counter Event Listener
 // ============================================================
 document.getElementById('reviewText').addEventListener('input', function () {
     document.getElementById('charCount').textContent = `(${this.value.length}/500)`;
 });
 
 // ============================================================
-//  Render daftar testimoni
 // ============================================================
 function renderList(testimonials) {
     const list  = document.getElementById('testimonialsList');
@@ -277,13 +269,10 @@ function renderList(testimonials) {
         return;
     }
 
-    testimonials.forEach((t, index) => {
-        // Variasi rotasi kecil untuk kartu agar terlihat playful
-        const rotation = index % 2 === 0 ? 'rotate-1' : '-rotate-1';
-        
+    testimonials.forEach((t) => {
         const card = document.createElement('div');
-        // Desain card disesuaikan jadi lebih lembut
-        card.className = `bg-white p-6 rounded-[2rem] border-[3px] border-white shadow-md flex flex-col sm:flex-row gap-5 animate-fade-in card-hover ${rotation} transform transition-transform`;
+        // KARTU LURUS: Dibuat simetris dan rapi, tidak miring sama sekali (tanpa transform rotate)
+        card.className = `bg-white p-6 rounded-[2rem] border-[3px] border-white shadow-md flex flex-col sm:flex-row gap-5 animate-fade-in card-hover`;
         card.innerHTML = `
             <div class="flex-shrink-0 flex justify-center sm:block">
                 <div class="w-20 h-20 bg-[#dceef4] rounded-full flex items-center justify-center border-4 border-white text-4xl shadow-sm">
@@ -303,7 +292,6 @@ function renderList(testimonials) {
 }
 
 // ============================================================
-//  Fetch & Submit Data Supabase (Tidak diubah logikanya)
 // ============================================================
 async function fetchTestimonials() {
     try {
